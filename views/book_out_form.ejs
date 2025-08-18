@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>หนังสือส่ง (Book Out) — ฟอร์ม</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans Thai', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-violet-50 via-rose-50 to-amber-50">
+  <header class="bg-gradient-to-r from-violet-600 to-rose-500 text-white shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg md:text-xl font-bold">📤 หนังสือส่ง (Book Out)</h1>
+      <div class="flex gap-2">
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/20 text-white text-sm hover:bg-white/30">เมนูหลัก</a>
+        <a href="/book-out/list" class="px-3 py-1.5 rounded-lg bg-white text-violet-700 text-sm hover:bg-violet-100">รายการหนังสือส่ง</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4 md:p-6">
+    <% if (error) { %>
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+        <strong>ผิดพลาด:</strong> <%= error %>
+      </div>
+    <% } %>
+
+    <form class="bg-white/95 border border-slate-200 rounded-2xl p-4 md:p-6 space-y-5 shadow-lg"
+          action="/book-out/create" method="post" enctype="multipart/form-data">
+
+      <!-- 1 เลขทะเบียนส่ง -->
+      <div class="p-3 rounded-xl bg-violet-50 border border-violet-200">
+        <label class="block text-sm font-semibold text-violet-700 mb-1">เลขทะเบียนส่ง <span class="text-red-600">*</span></label>
+        <input name="regNo" type="text" required
+               class="w-full rounded-xl border border-violet-300 focus:border-rose-500 focus:ring-rose-500 bg-white"
+               placeholder="เช่น 0456/2568" />
+      </div>
+
+      <!-- 2 ชั้นความเร็ว -->
+      <div class="p-3 rounded-xl bg-rose-50 border border-rose-200">
+        <span class="block text-sm font-semibold text-rose-700 mb-1">ชั้นความเร็ว</span>
+        <div class="flex flex-wrap gap-2">
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-slate-50">
+            <input type="radio" name="speed" value="ปกติ" class="accent-slate-600" checked>
+            <span class="text-slate-700">ปกติ</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-amber-100">
+            <input type="radio" name="speed" value="ด่วน" class="accent-amber-500">
+            <span class="text-amber-700">ด่วน</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-orange-100">
+            <input type="radio" name="speed" value="ด่วนมาก" class="accent-orange-500">
+            <span class="text-orange-700">ด่วนมาก</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-rose-100">
+            <input type="radio" name="speed" value="ด่วนที่สุด" class="accent-rose-600">
+            <span class="text-rose-700">ด่วนที่สุด</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 3 ที่ + 4 ลงวันที่ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-fuchsia-50 border border-fuchsia-200">
+          <label class="block text-sm font-semibold text-fuchsia-700 mb-1">ที่</label>
+          <input name="at" type="text"
+                 class="w-full rounded-xl border border-fuchsia-300 focus:border-fuchsia-500 focus:ring-fuchsia-500 bg-white"
+                 placeholder="เช่น นข. 456/2568" />
+        </div>
+        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+          <label class="block text-sm font-semibold text-amber-700 mb-1">ลงวันที่</label>
+          <input name="signDate" type="date"
+                 class="w-full rounded-xl border border-amber-300 focus:border-amber-500 focus:ring-amber-500 bg-white" />
+        </div>
+      </div>
+
+      <!-- 5 เวลาส่งหนังสือ -->
+      <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+        <label class="block text-sm font-semibold text-indigo-700 mb-1">เวลาส่งหนังสือ (อัตโนมัติ)</label>
+        <input id="timeDisplay" type="text" disabled
+               class="w-full bg-slate-100 rounded-xl border border-indigo-300"
+               value="">
+      </div>
+
+      <!-- 6 จาก + 7 ถึง -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-lime-50 border border-lime-200">
+          <label class="block text-sm font-semibold text-lime-700 mb-1">จาก</label>
+          <input name="from" type="text" value="องค์การบริหารส่วนตำบลหนองขาม"
+                 class="w-full rounded-xl border border-lime-300 focus:border-lime-500 focus:ring-lime-500 bg-white" />
+        </div>
+        <div class="p-3 rounded-xl bg-cyan-50 border border-cyan-200">
+          <label class="block text-sm font-semibold text-cyan-700 mb-1">ถึง</label>
+          <input name="to" type="text"
+                 class="w-full rounded-xl border border-cyan-300 focus:border-cyan-500 focus:ring-cyan-500 bg-white" />
+        </div>
+      </div>
+
+      <!-- 8 เรื่อง -->
+      <div class="p-3 rounded-xl bg-violet-50 border border-violet-200">
+        <label class="block text-sm font-semibold text-violet-700 mb-1">เรื่อง</label>
+        <input name="subject" type="text"
+               class="w-full rounded-xl border border-violet-300 focus:border-violet-500 focus:ring-violet-500 bg-white" />
+      </div>
+
+      <!-- 9 การปฏิบัติ -->
+      <div class="p-3 rounded-xl bg-rose-50 border border-rose-200">
+        <label class="block text-sm font-semibold text-rose-700 mb-1">การปฏิบัติ</label>
+        <select name="department"
+                class="w-full rounded-xl border border-rose-300 focus:border-rose-500 focus:ring-rose-500 bg-white">
+          <option value="">-- เลือกหน่วยงาน --</option>
+          <option>สำนักปลัด</option>
+          <option>กองคลัง</option>
+          <option>กองช่าง</option>
+          <option>กองสวัสดิการสังคม</option>
+          <option>กองสาธารณสุข</option>
+          <option>หน่วยตรวจสอบภายใน</option>
+          <option>นิติกร</option>
+          <option>ป้องกัน</option>
+          <option>ฝ่ายนโยบายและแผน</option>
+          <option>ฝ่ายทรัพยากรบุคคล</option>
+          <option>ฝ่ายบริหารงานทั่วไป</option>
+        </select>
+      </div>
+
+      <!-- 10 อัพโหลดไฟล์ -->
+      <div class="p-3 rounded-xl bg-amber-50 border border-amber-200">
+        <label class="block text-sm font-semibold text-amber-700 mb-1">แนบไฟล์ PDF</label>
+        <input name="pdfFile" type="file" accept="application/pdf"
+               class="w-full rounded-xl border-amber-300 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-violet-600 file:text-white hover:file:bg-violet-700 bg-white" />
+      </div>
+
+      <!-- ปุ่ม -->
+      <div class="flex justify-center">
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-rose-600 text-white hover:opacity-90 shadow">
+          บันทึก
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Toast Popup -->
+  <div id="toastSaved" class="hidden fixed top-4 right-4 z-50">
+    <div class="rounded-xl bg-emerald-600 text-white shadow-lg px-4 py-3">
+      ✅ บันทึกสำเร็จ
+    </div>
+  </div>
+
+  <script>
+    // แสดงเวลาปัจจุบัน
+    function updateTimeDisplay() {
+      const el = document.getElementById('timeDisplay');
+      if (!el) return;
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2,'0');
+      const mm = String(now.getMinutes()).padStart(2,'0');
+      const ss = String(now.getSeconds()).padStart(2,'0');
+      el.value = `${hh}:${mm}:${ss}`;
+    }
+    setInterval(updateTimeDisplay, 500);
+    updateTimeDisplay();
+
+    // ป๊อบอัพเมื่อบันทึกเสร็จ
+    (function(){
+      const params = new URLSearchParams(location.search);
+      if (params.get('saved') === '1') {
+        const t = document.getElementById('toastSaved');
+        t.classList.remove('hidden');
+        setTimeout(()=> t.classList.add('hidden'), 2000);
+      }
+    })();
+  </script>
+</body>
+</html>

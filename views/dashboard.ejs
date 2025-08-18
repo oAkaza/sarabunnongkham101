@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แดชบอร์ด — ระบบงานสารบรรณองค์การบริหารส่วนตำบลหนองขาม</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  :root{
+    --gov-primary:#1e3a8a;
+    --gov-accent:#0ea5e9;
+    --gov-surface:#ffffff;
+    --gov-bg:#F8FAFC;
+  }
+
+  body{ 
+    font-family: 'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+    background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff, #f8fafc);
+    min-height: 100vh;
+  }
+
+  .gov-header{
+    background: linear-gradient(90deg, var(--gov-primary), #2563eb);
+    color:#fff;
+    box-shadow: 0 2px 10px rgba(2,6,23,.05);
+  }
+
+  .gov-card{
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    transition: transform .12s ease, box-shadow .12s, border-color .12s, background .2s ease;
+  }
+  .gov-card:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(2,6,23,.10);
+  }
+  .gov-card-title{ font-weight: 700; color: #1e293b; }
+
+  .gov-panel{
+    background: var(--gov-surface);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(2,6,23,.04);
+  }
+
+  .gov-btn{
+    background: var(--gov-accent);
+    color:#fff;
+    border-radius: 10px;
+    padding:.6rem 1rem;
+    transition: background .12s ease, transform .08s ease;
+  }
+  .gov-btn:hover{ background:#0284c7; }
+  .gov-btn:active{ transform: translateY(1px); }
+
+  .menu-icon{width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;border-radius:0.75rem;}
+  .badge-count{display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;background:#f0f9ff;border:1px solid #bae6fd;color:#0369a1;font-weight:700;padding:.25rem .625rem;min-width:2.25rem}
+
+  /* 🎨 สีการ์ดแต่ละเมนู */
+  .card-in { background: linear-gradient(180deg, #e0f2fe, #fff); }
+  .card-out { background: linear-gradient(180deg, #ede9fe, #fff); }
+  .card-note { background: linear-gradient(180deg, #dcfce7, #fff); }
+  .card-order { background: linear-gradient(180deg, #fef9c3, #fff); }
+  .card-cert { background: linear-gradient(180deg, #fce7f3, #fff); }
+  .card-announce { background: linear-gradient(180deg, #fee2e2, #fff); }
+  </style>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="gov-header">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/favicon.svg" class="w-9 h-9" alt="logo">
+        <div>
+          <h1 class="text-lg md:text-xl font-bold">ระบบงานสารบรรณองค์การบริหารส่วนตำบลหนองขาม</h1>
+          <p class="text-xs opacity-90">แดชบอร์ดภาพรวม</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="hidden sm:inline text-sm opacity-90">สวัสดี, <%= user?.displayName || user?.username %></span>
+        <a href="/logout"
+           class="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 transition">
+          ออกจากระบบ
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="bg-gradient-to-b from-sky-50/80 via-blue-50/80 to-white">
+    <main class="max-w-6xl mx-auto p-4 md:p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <a href="/book-in/new" class="gov-card card-in p-5 md:p-6" aria-label="หนังสือรับ">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-sky-100 border border-sky-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0369a1" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">หนังสือรับ (Book In)</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลายเซ็นดิจิทัล/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.bookIn %></span>
+          </div>
+        </a>
+
+        <a href="/book-out/new" class="gov-card card-out p-5 md:p-6" aria-label="หนังสือส่ง">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-violet-100 border border-violet-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6d28d9" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">หนังสือส่ง (Book Out)</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.bookOut %></span>
+          </div>
+        </a>
+
+        <a href="/note/new" class="gov-card card-note p-5 md:p-6" aria-label="บันทึกข้อความ">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-green-100 border border-green-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#15803d" stroke-width="2"><path d="M4 6h16v10H8l-4 4z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">บันทึกข้อความ (Note)</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.note %></span>
+          </div>
+        </a>
+
+        <a href="/order/new" class="gov-card card-order p-5 md:p-6" aria-label="คำสั่ง">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-yellow-100 border border-yellow-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M6 6h12M6 12h12M6 18h7"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">คำสั่ง</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.order %></span>
+          </div>
+        </a>
+
+        <a href="/certificate/new" class="gov-card card-cert p-5 md:p-6" aria-label="หนังสือรับรอง">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-pink-100 border border-pink-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#be185d" stroke-width="2"><path d="M6 4h12v14l-6-3-6 3z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">หนังสือรับรอง</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.cert %></span>
+          </div>
+        </a>
+
+        <a href="/announce/new" class="gov-card card-announce p-5 md:p-6" aria-label="ประกาศ">
+          <div class="flex items-center gap-3">
+            <div class="menu-icon bg-red-100 border border-red-200">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#b91c1c" stroke-width="2"><path d="M3 11l18-7v16l-6-3-12 4z"/></svg>
+            </div>
+            <div class="min-w-0">
+              <h3 class="gov-card-title">ประกาศ</h3>
+              <p class="text-xs text-slate-500 mt-0.5">บันทึก/ค้นหา/แก้ไข/ลบ</p>
+            </div>
+            <span class="badge-count ml-auto"><%= counts.announce %></span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Footer เครดิต -->
+      <footer class="mt-10">
+        <div class="border-t border-slate-200 pt-4 text-center">
+          <p class="text-xs text-slate-500">
+            © <span id="yearNow"></span> ระบบงานสารบรรณองค์การบริหารส่วนตำบลหนองขาม v1.0.0
+          </p>
+          <p class="text-[11px] text-slate-500 mt-1">
+            Made with <span class="text-rose-500">❤</span> by <span class="font-medium text-slate-600">oChos</span>
+          </p>
+        </div>
+      </footer>
+
+      <script>
+        // อัปเดตปีอัตโนมัติ
+        document.getElementById('yearNow').textContent = new Date().getFullYear();
+      </script>
+    </main>
+  </div>
+</body>
+</html>

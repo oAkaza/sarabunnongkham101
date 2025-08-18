@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แก้ไขหนังสือรับ — <%= form.regNo %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{ font-family: 'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; }
+    /* ป้องกัน select-text ระหว่างเซ็น */
+    #sigCanvas { touch-action: none; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-emerald-50">
+  <header class="bg-gradient-to-r from-sky-600 to-emerald-500 text-white shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg md:text-xl font-bold">🛠️ แก้ไขหนังสือรับ</h1>
+      <div class="flex gap-2">
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/20 text-white text-sm hover:bg-white/30">เมนูหลัก</a>
+        <a href="/book-in/list" class="px-3 py-1.5 rounded-lg bg-white text-sky-700 text-sm hover:bg-sky-100">รายการหนังสือรับ</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4 md:p-6">
+    <% if (error) { %>
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+        <strong>ผิดพลาด:</strong> <%= error %>
+      </div>
+    <% } %>
+
+    <form class="bg-white/95 border border-slate-200 rounded-2xl p-4 md:p-6 space-y-5 shadow-lg"
+          action="/book-in/update/<%= form.id %>" method="post" enctype="multipart/form-data">
+
+      <!-- 1 เลขทะเบียนรับ (บังคับ + ห้ามซ้ำ) -->
+      <div class="p-3 rounded-xl bg-sky-50 border border-sky-200">
+        <label class="block text-sm font-semibold text-sky-700 mb-1">เลขทะเบียนรับ <span class="text-red-600">*</span></label>
+        <input name="regNo" type="text" required
+               class="w-full rounded-xl border border-sky-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+               value="<%= form.regNo || '' %>" />
+      </div>
+
+      <!-- แถว: วันที่รับ + เวลา (เวลาเดิม/รับครั้งแรก) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+          <label class="block text-sm font-semibold text-emerald-700 mb-1">วันที่รับ</label>
+          <input name="receiveDate" type="date"
+                 class="w-full rounded-xl border border-emerald-300 focus:border-sky-500 focus:ring-sky-500 bg-white"
+                 value="<%= form.receiveDate || '' %>" />
+        </div>
+        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+          <label class="block text-sm font-semibold text-indigo-700 mb-1">เวลา (ครั้งแรก)</label>
+          <input type="text" disabled
+                 class="w-full bg-slate-100 rounded-xl border border-indigo-300"
+                 value="<%= form.time || '' %>">
+          <p class="text-xs text-slate-500 mt-1">เก็บเวลารับครั้งแรกไว้ ไม่เปลี่ยนเมื่อแก้ไข</p>
+        </div>
+      </div>
+
+      <!-- 4 ชั้นความเร็ว -->
+      <div class="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+        <span class="block text-sm font-semibold text-yellow-700 mb-1">ชั้นความเร็ว</span>
+        <div class="flex flex-wrap gap-2">
+          <% const speeds = ['ปกติ','ด่วน','ด่วนมาก','ด่วนที่สุด']; %>
+          <% speeds.forEach(s => { %>
+            <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer <%= s==='ปกติ' ? 'bg-slate-50' : (s==='ด่วน' ? 'bg-yellow-100' : (s==='ด่วนมาก' ? 'bg-orange-100' : 'bg-red-100')) %>">
+              <input type="radio" name="speed" value="<%= s %>"
+                     class="<%= s==='ปกติ' ? 'accent-slate-600' : (s==='ด่วน' ? 'accent-yellow-500' : (s==='ด่วนมาก' ? 'accent-orange-500' : 'accent-red-600')) %>"
+                     <%= (form.speed||'ปกติ') === s ? 'checked' : '' %> >
+              <span class="<%= s==='ปกติ' ? 'text-slate-700' : (s==='ด่วน' ? 'text-yellow-700' : (s==='ด่วนมาก' ? 'text-orange-700' : 'text-red-700')) %>"><%= s %></span>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- 5 ที่ + 6 ลงวันที่ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-pink-50 border border-pink-200">
+          <label class="block text-sm font-semibold text-pink-700 mb-1">ที่</label>
+          <input name="at" type="text"
+                 class="w-full rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-pink-500 bg-white"
+                 value="<%= form.at || '' %>" />
+        </div>
+        <div class="p-3 rounded-xl bg-violet-50 border border-violet-200">
+          <label class="block text-sm font-semibold text-violet-700 mb-1">ลงวันที่</label>
+          <input name="signDate" type="date"
+                 class="w-full rounded-xl border border-violet-300 focus:border-violet-500 focus:ring-violet-500 bg-white"
+                 value="<%= form.signDate || '' %>" />
+        </div>
+      </div>
+
+      <!-- 7 จาก + 8 ถึง -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-cyan-50 border border-cyan-200">
+          <label class="block text-sm font-semibold text-cyan-700 mb-1">จาก</label>
+          <input name="from" type="text"
+                 class="w-full rounded-xl border border-cyan-300 focus:border-cyan-500 focus:ring-cyan-500 bg-white"
+                 value="<%= form.from || '' %>" />
+        </div>
+        <div class="p-3 rounded-xl bg-lime-50 border border-lime-200">
+          <label class="block text-sm font-semibold text-lime-700 mb-1">ถึง</label>
+          <input name="to" type="text"
+                 class="w-full rounded-xl border border-lime-300 focus:border-lime-500 focus:ring-lime-500 bg-white"
+                 value="<%= form.to || 'องค์การบริหารส่วนตำบลหนองขาม' %>" />
+        </div>
+      </div>
+
+      <!-- 9 เรื่อง -->
+      <div class="p-3 rounded-xl bg-fuchsia-50 border border-fuchsia-200">
+        <label class="block text-sm font-semibold text-fuchsia-700 mb-1">เรื่อง</label>
+        <input name="subject" type="text"
+               class="w-full rounded-xl border border-fuchsia-300 focus:border-fuchsia-500 focus:ring-fuchsia-500 bg-white"
+               value="<%= form.subject || '' %>" />
+      </div>
+
+      <!-- 10 การปฏิบัติ -->
+      <div class="p-3 rounded-xl bg-rose-50 border border-rose-200">
+        <label class="block text-sm font-semibold text-rose-700 mb-1">การปฏิบัติ</label>
+        <select name="department"
+                class="w-full rounded-xl border border-rose-300 focus:border-rose-500 focus:ring-rose-500 bg-white">
+          <option value="">-- เลือกหน่วยงาน --</option>
+          <% const deps = ['สำนักปลัด','กองคลัง','กองช่าง','กองสวัสดิการสังคม','กองสาธารณสุข','หน่วยตรวจสอบภายใน','นิติกร','ป้องกัน','ฝ่ายนโยบายและแผน','ฝ่ายทรัพยากรบุคคล','ฝ่ายบริหารงานทั่วไป']; %>
+          <% deps.forEach(d => { %>
+            <option value="<%= d %>" <%= (form.department||'')===d ? 'selected' : '' %>><%= d %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- 11 แนบไฟล์ PDF -->
+      <div class="p-3 rounded-xl bg-teal-50 border border-teal-200">
+        <label class="block text-sm font-semibold text-teal-700 mb-1">ไฟล์แนบ PDF</label>
+        <div class="flex items-center gap-3">
+          <input name="pdfFile" type="file" accept="application/pdf"
+                 class="flex-1 rounded-xl border-teal-300 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700 bg-white" />
+          <% if (form.pdfPath) { %>
+            <a class="text-sky-700 hover:underline whitespace-nowrap" href="<%= form.pdfPath %>" target="_blank">ดูไฟล์เดิม</a>
+          <% } %>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">ถ้าไม่เลือกไฟล์ใหม่ ระบบจะใช้ไฟล์เดิม</p>
+      </div>
+
+      <!-- ✍️  ลายเซ็น (ใหม่) -->
+      <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+        <label class="block text-sm font-semibold text-indigo-700 mb-2">ลายเซ็น</label>
+        <!-- ค่าที่จะส่งไป backend -->
+        <input type="hidden" name="signatureData" id="signatureData" value="<%= form.signatureData || '' %>">
+
+        <!-- พรีวิวลายเซ็นที่บันทึกไว้ (ถ้ามี) -->
+        <div class="mb-2">
+          <% if (form.signatureData) { %>
+            <div class="text-xs text-slate-500 mb-1">ลายเซ็นเดิมที่บันทึกไว้:</div>
+            <img id="sigSavedPreview" src="<%= form.signatureData %>" alt="signature" class="h-20 border rounded-lg bg-white"/>
+          <% } else { %>
+            <div id="sigNoSaved" class="text-xs text-slate-400">(ยังไม่มีลายเซ็นที่บันทึกไว้)</div>
+          <% } %>
+        </div>
+
+        <!-- แท็บเล็ต/เมาส์/มือถือ ใช้ได้ -->
+        <div class="border rounded-xl bg-white p-3">
+          <canvas id="sigCanvas" class="w-full h-40 rounded-lg border border-slate-200 bg-white"></canvas>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button type="button" id="btnSigClear" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-800 hover:bg-slate-300">ล้างลายเซ็น</button>
+            <% if (form.signatureData) { %>
+              <button type="button" id="btnSigLoadSaved" class="px-3 py-1.5 rounded-lg bg-sky-100 text-sky-800 hover:bg-sky-200">โหลดจากลายเซ็นเดิม</button>
+            <% } %>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">รองรับการเซ็นด้วยเมาส์, นิ้ว หรือปากกาบนมือถือ/แท็บเล็ต</p>
+        </div>
+      </div>
+
+      <!-- ปุ่มบันทึก + ลิงก์ -->
+      <div class="flex justify-center">
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-sky-600 text-white hover:opacity-90 shadow">
+          บันทึกการแก้ไข
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <!-- Toast Popup -->
+  <div id="toastSaved" class="hidden fixed top-4 right-4 z-50">
+    <div class="rounded-xl bg-emerald-600 text-white shadow-lg px-4 py-3">
+      ✅ บันทึกสำเร็จ
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      if (params.get('saved') === '1') {
+        const t = document.getElementById('toastSaved');
+        t.classList.remove('hidden');
+        setTimeout(()=> t.classList.add('hidden'), 2000);
+      }
+    })();
+
+    // ===== Signature Pad (เมาส์/มือถือ/แท็บเล็ต) =====
+    (function(){
+      const canvas = document.getElementById('sigCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const hidden = document.getElementById('signatureData');
+      let drawing = false;
+      let lastX = 0, lastY = 0;
+
+      function resizeCanvas() {
+        // รักษาความคมชัดบนจอ HiDPI
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.floor(rect.width * ratio);
+        canvas.height = Math.floor(rect.height * ratio);
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.scale(ratio, ratio);
+        // พื้นหลังขาว
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        // ถ้ามีค่าลายเซ็นเดิมใน hidden ให้วาดทับ
+        if (hidden.value) {
+          const img = new Image();
+          img.onload = () => { ctx.drawImage(img, 0, 0, rect.width, rect.height); };
+          img.src = hidden.value;
+        }
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#111827'; // slate-900
+      }
+
+      function posFromEvent(e){
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX ?? (e.touches && e.touches[0].clientX) ?? 0) - rect.left;
+        const y = (e.clientY ?? (e.touches && e.touches[0].clientY) ?? 0) - rect.top;
+        return { x, y };
+      }
+
+      function pointerDown(e){
+        e.preventDefault();
+        drawing = true;
+        const {x,y} = posFromEvent(e);
+        lastX = x; lastY = y;
+      }
+      function pointerMove(e){
+        if(!drawing) return;
+        const {x,y} = posFromEvent(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        lastX = x; lastY = y;
+      }
+      function pointerUp(){
+        if(!drawing) return; drawing = false;
+        // อัปเดต hidden ด้วย dataURL (PNG)
+        hidden.value = canvas.toDataURL('image/png');
+        // อัปเดตพรีวิวเดิม (ถ้ามี element)
+        const prev = document.getElementById('sigSavedPreview');
+        if (prev) prev.src = hidden.value;
+        const noSaved = document.getElementById('sigNoSaved');
+        if (noSaved) noSaved.remove();
+      }
+
+      // รองรับ pointer / touch / mouse
+      canvas.addEventListener('pointerdown', pointerDown);
+      canvas.addEventListener('pointermove', pointerMove);
+      window.addEventListener('pointerup', pointerUp);
+      canvas.addEventListener('touchstart', pointerDown, {passive:false});
+      canvas.addEventListener('touchmove', pointerMove, {passive:false});
+      window.addEventListener('touchend', pointerUp);
+      canvas.addEventListener('mousedown', pointerDown);
+      canvas.addEventListener('mousemove', pointerMove);
+      window.addEventListener('mouseup', pointerUp);
+
+      // ล้างลายเซ็น
+      const btnClear = document.getElementById('btnSigClear');
+      if (btnClear) btnClear.addEventListener('click', () => {
+        const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0,0,rect.width,rect.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        hidden.value = '';
+        const prev = document.getElementById('sigSavedPreview');
+        if (prev) prev.src = '';
+      });
+
+      // โหลดจากลายเซ็นเดิมที่บันทึกไว้
+      const btnLoad = document.getElementById('btnSigLoadSaved');
+      if (btnLoad) btnLoad.addEventListener('click', () => {
+        if (!hidden.value) return;
+        const rect = canvas.getBoundingClientRect();
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0,0,rect.width,rect.height);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, rect.width, rect.height);
+          ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        };
+        img.src = hidden.value;
+      });
+
+      // รีไซซ์ตามจอ
+      const ro = new ResizeObserver(resizeCanvas);
+      ro.observe(canvas);
+      resizeCanvas();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>รายการหนังสือส่ง</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{ font-family:'Noto Sans Thai',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial,'Noto Sans','Liberation Sans',sans-serif; }
+    thead.sticky th{ position:sticky; top:0; background:#f1f5f9; z-index:1; }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-violet-50 via-rose-50 to-amber-50">
+  <!-- HEADER -->
+  <header class="bg-gradient-to-r from-violet-600 to-rose-500 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-bold">📤 รายการหนังสือส่ง</h1>
+      <div class="flex gap-2">
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/20 text-white text-sm hover:bg-white/30">เมนูหลัก</a>
+        <a href="/book-out/new" class="px-3 py-1.5 rounded-lg bg-white text-violet-700 text-sm hover:bg-violet-100">เพิ่มรายการ</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-6xl mx-auto p-4 md:p-6 space-y-4">
+
+    <!-- Toolbar: ค้นหา + Export -->
+    <div class="bg-white/90 border border-slate-200 rounded-2xl p-3 md:p-4 flex flex-col md:flex-row md:items-center gap-3 shadow">
+      <form method="get" action="/book-out/list" class="flex items-center gap-2">
+        <input type="text" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>"
+               class="rounded-xl border-violet-300 focus:border-rose-500 focus:ring-rose-500 w-72 bg-violet-50/30"
+               placeholder="ค้นหา: เลขทะเบียน/เรื่อง/จาก/ถึง/หน่วยงาน" />
+        <button class="px-3 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-rose-600 text-white hover:opacity-90 shadow" type="submit">ค้นหา</button>
+        <a href="/book-out/list" class="px-3 py-2 rounded-xl bg-slate-200 text-slate-800 hover:bg-slate-300 shadow">ล้าง</a>
+      </form>
+      <div class="md:ml-auto">
+        <a href="/book-out/export<% if (q) { %>?q=<%= encodeURIComponent(q) %><% } %>"
+           class="px-3 py-2 rounded-xl bg-amber-500 text-white hover:bg-amber-600 shadow">
+          Export Excel
+        </a>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="overflow-x-auto bg-white/95 rounded-2xl border border-slate-200 shadow-lg">
+      <table class="min-w-full text-sm">
+        <thead class="sticky top-0 text-slate-700 bg-gradient-to-r from-slate-100 via-violet-50 to-rose-50">
+          <tr class="*:[&>th]:px-3 *:[&>th]:py-2">
+            <th class="text-center w-28">เลขทะเบียนส่ง</th>
+            <th class="text-center w-24">ลงวันที่</th>
+            <th class="text-left w-24">เวลาส่ง</th>
+            <th class="text-left w-28">ชั้นความเร็ว</th>
+            <th class="text-center">เรื่อง</th>
+            <th class="text-left w-40">การปฏิบัติ</th>
+            <th class="text-center w-24">ไฟล์</th>
+            <th class="text-center w-32">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y *:[&>tr>td]:px-3 *:[&>tr>td]:py-2 *:[&>tr>td]:text-center">
+          <% if (!items || items.length === 0) { %>
+            <tr>
+              <td colspan="8" class="px-3 py-8 text-center text-slate-400">ยังไม่มีข้อมูล</td>
+            </tr>
+          <% } else { %>
+            <% items.forEach(row => { %>
+              <tr class="odd:bg-white even:bg-slate-50/60 hover:bg-violet-50">
+                <td class="font-medium text-slate-800 text-center"><%= row.regNo %></td>
+                <td><%= row.signDate || '-' %></td>
+                <td class="text-left"><%= row.time || '-' %></td>
+                <td class="text-left">
+                  <% const sp = (row.speed||'ปกติ'); %>
+                  <span class="inline-block px-2 py-0.5 rounded-lg text-xs border
+                    <%= sp==='ปกติ' ? 'bg-slate-100 text-slate-700 border-slate-200' :
+                        sp==='ด่วน' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                        sp==='ด่วนมาก' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                        'bg-rose-100 text-rose-800 border-rose-200' %>">
+                    <%= sp %>
+                  </span>
+                </td>
+
+                <!-- เรื่อง: จำกัด 20 ตัวอักษร + tooltip -->
+                <td class="px-3 py-2">
+                  <span title="<%= row.subject || '' %>">
+                    <%= row.subject
+                        ? (row.subject.length > 20 ? row.subject.substring(0, 20) + '...' : row.subject)
+                        : '-' %>
+                  </span>
+                </td>
+
+                <td class="max-w-[26ch] truncate text-left" title="<%= row.department || '' %>"><%= row.department || '-' %></td>
+
+                <td class="text-center">
+                  <% if (row.pdfPath) { %>
+                    <a class="inline-block px-2 py-1 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 hover:underline" href="<%= row.pdfPath %>" target="_blank">ดู PDF</a>
+                  <% } else { %>-<% } %>
+                </td>
+
+                <!-- จัดการ -->
+                <td>
+                  <div class="flex gap-2 justify-center">
+                    <a class="inline-block px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 shadow"
+                       href="/book-out/edit/<%= row.id %>">แก้ไข</a>
+                    <button type="button"
+                            class="inline-block px-3 py-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 shadow"
+                            onclick="openDeleteModal('<%= row.id %>', '<%= row.regNo %>')">
+                      ลบ
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Pagination -->
+  <div class="p-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col items-center gap-3">
+        <div class="text-sm text-slate-700 text-center bg-white/70 px-3 py-1 rounded-lg">
+          แสดง <%= items.length %> รายการ จากทั้งหมด <%= total %> | หน้า <%= page %>/<%= pages %>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <%
+            function linkTo(p){
+              const qs = [];
+              if (q) qs.push('q=' + encodeURIComponent(q));
+              if (p > 1) qs.push('page=' + p);
+              const qstr = qs.length ? ('?' + qs.join('&')) : '';
+              return '/book-out/list' + qstr;
+            }
+          %>
+
+          <!-- Prev -->
+          <% if (page > 1) { %>
+            <a href="<%= linkTo(page - 1) %>" class="px-3 py-1.5 rounded-lg border hover:bg-slate-50">ก่อนหน้า</a>
+          <% } else { %>
+            <span class="px-3 py-1.5 rounded-lg border bg-slate-100 text-slate-400 cursor-not-allowed">ก่อนหน้า</span>
+          <% } %>
+
+          <!-- page numbers -->
+          <% for (let p = 1; p <= pages; p++) { %>
+            <% if (p === page) { %>
+              <span class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-rose-600 text-white shadow"><%= p %></span>
+            <% } else { %>
+              <a href="<%= linkTo(p) %>" class="px-3 py-1.5 rounded-lg border hover:bg-slate-50"><%= p %></a>
+            <% } %>
+          <% } %>
+
+          <!-- Next -->
+          <% if (page < pages) { %>
+            <a href="<%= linkTo(page + 1) %>" class="px-3 py-1.5 rounded-lg border hover:bg-slate-50">ถัดไป</a>
+          <% } else { %>
+            <span class="px-3 py-1.5 rounded-lg border bg-slate-100 text-slate-400 cursor-not-allowed">ถัดไป</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ลบ -->
+  <div id="deleteModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" onclick="closeDeleteModal()"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-[90%] max-w-md p-5 border border-slate-100">
+      <h3 class="text-lg font-semibold text-slate-800">ยืนยันการลบ</h3>
+      <p class="text-sm text-slate-600 mt-1">
+        กรุณาใส่รหัสผ่านเพื่อยืนยันการลบรายการ
+        <span id="delRegNo" class="font-medium text-slate-900"></span>
+      </p>
+      <form id="deleteForm" class="mt-4" method="post">
+        <label class="block text-sm text-slate-700 mb-1">รหัสผ่าน</label>
+        <input type="password" name="password" id="delPassword" required
+               class="w-full rounded-xl border-rose-300 focus:border-rose-500 focus:ring-rose-500 bg-rose-50/40"
+               placeholder="ใส่รหัสผ่านหรือติดต่อแอดมิน" />
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-800 hover:bg-slate-300" onclick="closeDeleteModal()">ยกเลิก</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-amber-500 text-white hover:opacity-90 shadow">ลบรายการ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOASTS -->
+  <div id="toastDeleted" class="hidden fixed top-4 right-4 z-50">
+    <div class="rounded-xl bg-emerald-600 text-white shadow-lg px-4 py-3">🗑️ ลบสำเร็จ</div>
+  </div>
+  <div id="toastDelErr" class="hidden fixed top-4 right-4 z-50">
+    <div class="rounded-xl bg-rose-600 text-white shadow-lg px-4 py-3">❌ รหัสผ่านไม่ถูกต้อง</div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script>
+    function openDeleteModal(id, regNo){
+      const modal = document.getElementById('deleteModal');
+      const form = document.getElementById('deleteForm');
+      const label = document.getElementById('delRegNo');
+      const pass = document.getElementById('delPassword');
+      form.action = `/book-out/delete/${id}`;
+      label.textContent = regNo ? `เลขทะเบียนส่ง ${regNo}` : '';
+      pass.value = '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(()=> pass.focus(), 50);
+    }
+    function closeDeleteModal(){
+      const modal = document.getElementById('deleteModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    (function(){
+      const p = new URLSearchParams(location.search);
+      if (p.get('deleted') === '1'){
+        const t = document.getElementById('toastDeleted');
+        t.classList.remove('hidden'); setTimeout(()=> t.classList.add('hidden'), 2000);
+      }
+      if (p.get('derr') === '1'){
+        const t = document.getElementById('toastDelErr');
+        t.classList.remove('hidden'); setTimeout(()=> t.classList.add('hidden'), 2500);
+      }
+    })();
+  </script>
+</body>
+</html>

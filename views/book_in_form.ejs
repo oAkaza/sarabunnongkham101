@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>หนังสือรับ (Book In) — ฟอร์ม</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-emerald-50">
+  <header class="bg-gradient-to-r from-sky-600 to-emerald-500 text-white shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <h1 class="text-lg md:text-xl font-bold">📘 หนังสือรับ (Book In)</h1>
+      <div class="flex gap-2">
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-white/20 text-white text-sm hover:bg-white/30">เมนูหลัก</a>
+        <a href="/book-in/list" class="px-3 py-1.5 rounded-lg bg-white text-sky-700 text-sm hover:bg-sky-100">รายการหนังสือรับ</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4 md:p-6">
+    <% if (error) { %>
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+        <strong>ผิดพลาด:</strong> <%= error %>
+      </div>
+    <% } %>
+
+    <form class="bg-white/90 border border-slate-200 rounded-2xl shadow-lg p-4 md:p-6 space-y-5"
+          action="/book-in/create" method="post" enctype="multipart/form-data">
+
+      <!-- 1 เลขทะเบียนรับ -->
+      <div class="p-3 rounded-xl bg-sky-50 border border-sky-200">
+        <label class="block text-sm font-semibold text-sky-700 mb-1">เลขทะเบียนรับ <span class="text-red-600">*</span></label>
+        <input name="regNo" type="text" required
+               class="w-full rounded-xl border border-sky-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+               placeholder="เช่น 0123/2568" />
+        <p class="text-xs text-slate-500 mt-1">บังคับกรอก และจะไม่ให้ซ้ำกับรายการเดิม</p>
+      </div>
+
+      <!-- วันที่ + เวลา -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+          <label class="block text-sm font-semibold text-emerald-700 mb-1">วันที่รับ</label>
+          <input name="receiveDate" type="date"
+                 class="w-full rounded-xl border border-emerald-300 focus:border-sky-500 focus:ring-sky-500 bg-white" />
+        </div>
+        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-200">
+          <label class="block text-sm font-semibold text-indigo-700 mb-1">เวลา (อัตโนมัติ)</label>
+          <input id="timeDisplay" type="text" disabled
+                 class="w-full bg-slate-100 rounded-xl border border-indigo-300"
+                 value="">
+          <p class="text-xs text-slate-500 mt-1">จะบันทึกเวลาจากเครื่องเซิร์ฟเวอร์อัตโนมัติขณะกดบันทึก</p>
+        </div>
+      </div>
+
+      <!-- ชั้นความเร็ว -->
+      <div class="p-3 rounded-xl bg-yellow-50 border border-yellow-200">
+        <span class="block text-sm font-semibold text-yellow-700 mb-1">ชั้นความเร็ว</span>
+        <div class="flex flex-wrap gap-2">
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-slate-50">
+            <input type="radio" name="speed" value="ปกติ" class="accent-slate-600" checked>
+            <span class="text-slate-700">ปกติ</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-yellow-100">
+            <input type="radio" name="speed" value="ด่วน" class="accent-yellow-500">
+            <span class="text-yellow-700">ด่วน</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-orange-100">
+            <input type="radio" name="speed" value="ด่วนมาก" class="accent-orange-500">
+            <span class="text-orange-700">ด่วนมาก</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer bg-red-100">
+            <input type="radio" name="speed" value="ด่วนที่สุด" class="accent-red-600">
+            <span class="text-red-700">ด่วนที่สุด</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ที่ + ลงวันที่ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-pink-50 border border-pink-200">
+          <label class="block text-sm font-semibold text-pink-700 mb-1">ที่</label>
+          <input name="at" type="text"
+                 class="w-full rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-pink-500 bg-white"
+                 placeholder="เช่น นข. 123/2568" />
+        </div>
+        <div class="p-3 rounded-xl bg-violet-50 border border-violet-200">
+          <label class="block text-sm font-semibold text-violet-700 mb-1">ลงวันที่</label>
+          <input name="signDate" type="date"
+                 class="w-full rounded-xl border border-violet-300 focus:border-violet-500 focus:ring-violet-500 bg-white" />
+        </div>
+      </div>
+
+      <!-- จาก + ถึง -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-cyan-50 border border-cyan-200">
+          <label class="block text-sm font-semibold text-cyan-700 mb-1">จาก</label>
+          <input name="from" type="text"
+                 class="w-full rounded-xl border border-cyan-300 focus:border-cyan-500 focus:ring-cyan-500 bg-white" />
+        </div>
+        <div class="p-3 rounded-xl bg-lime-50 border border-lime-200">
+          <label class="block text-sm font-semibold text-lime-700 mb-1">ถึง</label>
+          <input name="to" type="text" value="องค์การบริหารส่วนตำบลหนองขาม"
+                 class="w-full rounded-xl border border-lime-300 focus:border-lime-500 focus:ring-lime-500 bg-white" />
+        </div>
+      </div>
+
+      <!-- เรื่อง -->
+      <div class="p-3 rounded-xl bg-fuchsia-50 border border-fuchsia-200">
+        <label class="block text-sm font-semibold text-fuchsia-700 mb-1">เรื่อง</label>
+        <input name="subject" type="text"
+               class="w-full rounded-xl border border-fuchsia-300 focus:border-fuchsia-500 focus:ring-fuchsia-500 bg-white" />
+      </div>
+
+      <!-- การปฏิบัติ -->
+      <div class="p-3 rounded-xl bg-rose-50 border border-rose-200">
+        <label class="block text-sm font-semibold text-rose-700 mb-1">การปฏิบัติ</label>
+        <select name="department"
+                class="w-full rounded-xl border border-rose-300 focus:border-rose-500 focus:ring-rose-500 bg-white">
+          <option value="">-- เลือกหน่วยงาน --</option>
+          <option>สำนักปลัด</option>
+          <option>กองคลัง</option>
+          <option>กองช่าง</option>
+          <option>กองสวัสดิการสังคม</option>
+          <option>กองสาธารณสุข</option>
+          <option>หน่วยตรวจสอบภายใน</option>
+          <option>นิติกร</option>
+          <option>ป้องกัน</option>
+          <option>ฝ่ายนโยบายและแผน</option>
+          <option>ฝ่ายทรัพยากรบุคคล</option>
+          <option>ฝ่ายบริหารงานทั่วไป</option>
+        </select>
+      </div>
+
+      <!-- แนบไฟล์ -->
+      <div class="p-3 rounded-xl bg-teal-50 border border-teal-200">
+        <label class="block text-sm font-semibold text-teal-700 mb-1">แนบไฟล์ PDF</label>
+        <input name="pdfFile" type="file" accept="application/pdf"
+               class="w-full rounded-xl border-teal-300 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700 bg-white" />
+        <p class="text-xs text-slate-500 mt-1">รองรับเฉพาะไฟล์ PDF</p>
+      </div>
+
+      <!-- ปุ่ม -->
+      <div class="flex justify-center">
+        <button type="submit"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-sky-600 text-white shadow hover:opacity-90">
+          บันทึก
+        </button>
+      </div>
+    </form>
+  </main>
+<div id="toastSaved" class="hidden fixed top-4 right-4 z-50">
+    <div class="rounded-xl bg-emerald-600 text-white shadow-lg px-4 py-3">
+      ✅ บันทึกสำเร็จ
+    </div>
+  </div>
+
+  <script>
+  // โชว์เวลาแบบเดิม
+  function updateTimeDisplay() {
+    const el = document.getElementById('timeDisplay');
+    if (!el) return;
+    const now = new Date();
+    el.value = now.toLocaleTimeString('th-TH');
+  }
+  setInterval(updateTimeDisplay, 500);
+  updateTimeDisplay();
+
+  // Toast success เมื่อมี ?saved=1
+  (function showSavedToastIfNeeded() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('saved') === '1') {
+      const box = document.getElementById('toastSaved');
+      if (box) {
+        box.classList.remove('hidden');
+        // ซ่อนเองหลัง 2500 ms
+        setTimeout(() => box.classList.add('hidden'), 2500);
+        // ลบพารามิเตอร์จาก URL (ป้องกันกดรีเฟรชแล้วขึ้นซ้ำ)
+        const url = new URL(window.location);
+        url.searchParams.delete('saved');
+        window.history.replaceState({}, '', url);
+      }
+    }
+  })();
+</script>
+</body>
+</html>
