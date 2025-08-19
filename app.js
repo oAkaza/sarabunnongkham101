@@ -1,36 +1,38 @@
+// app.js
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Basic settings ---
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); // ให้ secure cookie ทำงานหลัง reverse proxy (เช่น Render)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// --- Static files ---
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
+
+// --- Parsers (กำหนดครั้งเดียวพอ) ---
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
-app.listen(PORT, '0.0.0.0', () => console.log(`Server on ${PORT}`));
 
-
-// --- Session ---
+// --- Session (วางก่อน routes เสมอ) ---
 app.use(session({
-  secret: 'saraban_local_secret_key',
+  // ควรตั้งจาก ENV ใน production
+  secret: process.env.SESSION_SECRET || 'saraban_local_secret_key',
   resave: false,
   saveUninitialized: false,
+  name: 'saraban.sid',
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,   // ใช้ secure cookie ได้ เพราะผู้ใช้เข้า HTTPS
-    // ไม่กำหนด maxAge = session-only (ปิดเบราว์เซอร์แล้วต้องล็อกอินใหม่)
+    secure: process.env.NODE_ENV === 'production', // true เมื่อรันหลัง HTTPS (Render)
+    // ไม่กำหนด maxAge = เป็น session cookie
   }
 }));
-
-
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // --- Auth guard ---
 function requireAuth(req, res, next) {
@@ -49,7 +51,6 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
-  // ✅ Fixed credentials per requirement
   const VALID_USER = 'user';
   const VALID_PASS = '1234';
 
@@ -63,36 +64,39 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie('connect.sid');
+    res.clearCookie('saraban.sid');
     res.redirect('/login');
   });
 });
 
-// ให้เสิร์ฟไฟล์อัปโหลดและ assets
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// ตั้งค่า view engine เป็น EJS (ถ้ายัง)
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-// ใช้งาน book_in routes
+// ใช้งานโมดูลย่อย
 const dashboardRoutes = require('./routes/dashboard');
 const bookInRoutes = require('./routes/book_in');
-const bookOut = require('./routes/book_out');
+const bookOutRoutes = require('./routes/book_out');
 const noteRoutes = require('./routes/note');
 const orderRoutes = require('./routes/order');
 const certificateRoutes = require('./routes/certificate');
 const announceRoutes = require('./routes/announce');
-app.use('/dashboard', dashboardRoutes);
-app.use('/book-in', bookInRoutes);
-app.use('/book-out', bookOut);
-app.use('/note', noteRoutes);
-app.use('/order', orderRoutes);
-app.use('/certificate', certificateRoutes);
-app.use('/announce', announceRoutes);
 
+app.use('/dashboard', requireAuth, dashboardRoutes);
+app.use('/book-in', requireAuth, bookInRoutes);
+app.use('/book-out', requireAuth, bookOutRoutes);
+app.use('/note', requireAuth, noteRoutes);
+app.use('/order', requireAuth, orderRoutes);
+app.use('/certificate', requireAuth, certificateRoutes);
+app.use('/announce', requireAuth, announceRoutes);
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Saraban Local running at http://localhost:${PORT}`);
+// --- Health check (ช่วยให้แพลตฟอร์มเช็คได้ว่าแอปพร้อม) ---
+app.get('/healthz', (req, res) => res.status(200).send('ok'));
+
+// --- 404 & Error handlers แบบเบา ๆ ---
+app.use((req, res) => res.status(404).send('Not Found'));
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send('Internal Server Error');
+});
+
+// --- Listen (เรียกครั้งเดียวพอ และไม่ fix IP) ---
+app.listen(PORT, () => {
+  console.log(`Saraban Local running on port ${PORT}`);
 });
