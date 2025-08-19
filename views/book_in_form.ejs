@@ -138,12 +138,24 @@
       </div>
 
       <!-- แนบไฟล์ -->
-      <div class="p-3 rounded-xl bg-teal-50 border border-teal-200">
-        <label class="block text-sm font-semibold text-teal-700 mb-1">แนบไฟล์ PDF</label>
-        <input name="pdfFile" type="file" accept="application/pdf"
-               class="w-full rounded-xl border-teal-300 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700 bg-white" />
-        <p class="text-xs text-slate-500 mt-1">รองรับเฉพาะไฟล์ PDF</p>
-      </div>
+      <!-- แนบไฟล์ -->
+<div class="p-3 rounded-xl bg-teal-50 border border-teal-200">
+  <label class="block text-sm font-semibold text-teal-700 mb-1">แนบไฟล์ PDF</label>
+
+  <!-- ชื่อฟิลด์ต้องเป็น pdf ให้ตรงกับ /files/upload -->
+  <input id="pdfInput" name="pdf" type="file" accept="application/pdf"
+         class="w-full rounded-xl border-teal-300 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-teal-600 file:text-white hover:file:bg-teal-700 bg-white" />
+  <p class="text-xs text-slate-500 mt-1">รองรับเฉพาะไฟล์ PDF (สูงสุด ~20MB)</p>
+
+  <!-- เก็บผลลัพธ์ที่ได้จาก Google Drive -->
+  <input type="hidden" name="drive_file_id" id="driveFileId">
+  <input type="hidden" name="drive_view_link" id="driveViewLink">
+  <input type="hidden" name="drive_download_link" id="driveDownloadLink">
+
+  <!-- สถานะการอัปโหลด -->
+  <div id="pdfStatus" class="text-xs mt-2 text-slate-600"></div>
+</div>
+
 
       <!-- ปุ่ม -->
       <div class="flex justify-center">
@@ -186,6 +198,68 @@
         window.history.replaceState({}, '', url);
       }
     }
+  })();
+</script>
+<script>
+  // ====== อัปโหลดไฟล์ไป Google Drive เมื่อผู้ใช้เลือกไฟล์ ======
+  (function setupPdfUpload() {
+    const pdfInput   = document.getElementById('pdfInput');
+    const statusEl   = document.getElementById('pdfStatus');
+    const fileIdEl   = document.getElementById('driveFileId');
+    const viewEl     = document.getElementById('driveViewLink');
+    const dlEl       = document.getElementById('driveDownloadLink');
+    const form       = document.querySelector('form[action="/book-in/create"]');
+
+    if (!pdfInput || !form) return;
+
+    pdfInput.addEventListener('change', async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+
+      // ตรวจชนิด/ขนาดแบบเบื้องต้น
+      if (f.type !== 'application/pdf') {
+        statusEl.textContent = 'กรุณาเลือกไฟล์ PDF เท่านั้น';
+        e.target.value = '';
+        return;
+      }
+      if (f.size > 20 * 1024 * 1024) {
+        statusEl.textContent = 'ไฟล์ใหญ่เกิน 20MB';
+        e.target.value = '';
+        return;
+      }
+
+      statusEl.textContent = 'กำลังอัปโหลดไปยัง Google Drive...';
+      const fd = new FormData();
+      fd.append('pdf', f);
+
+      try {
+        const res  = await fetch('/files/upload', { method: 'POST', body: fd, credentials: 'include' });
+        const data = await res.json();
+
+        if (data?.ok) {
+          fileIdEl.value = data.id || '';
+          viewEl.value   = data.viewLink || '';
+          dlEl.value     = data.downloadLink || '';
+
+          statusEl.innerHTML = `อัปโหลดสำเร็จ ✔ <a class="underline text-teal-700" href="${data.viewLink}" target="_blank">เปิดไฟล์</a>`;
+        } else {
+          statusEl.textContent = 'อัปโหลดไม่สำเร็จ กรุณาลองใหม่';
+          console.error('Upload fail:', data);
+        }
+      } catch (err) {
+        statusEl.textContent = 'อัปโหลดล้มเหลว (เครือข่าย/สิทธิ์)';
+        console.error(err);
+      }
+    });
+
+    // ก่อนส่งฟอร์ม: ไม่ต้องส่งไฟล์ซ้ำไป /book-in/create
+    form.addEventListener('submit', (e) => {
+      // ถ้าต้อง “บังคับมีไฟล์” ให้เปิดบรรทัดตรวจนี้
+      // if (!fileIdEl.value) { e.preventDefault(); alert('กรุณาอัปโหลดไฟล์ PDF ก่อนบันทึก'); }
+
+      // ปิดการส่งไฟล์ตัวจริงไปกับฟอร์ม (เรามี fileId แล้ว)
+      if (pdfInput) pdfInput.disabled = true;
+    });
   })();
 </script>
 </body>

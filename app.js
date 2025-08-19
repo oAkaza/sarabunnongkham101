@@ -77,6 +77,7 @@ const noteRoutes = require('./routes/note');
 const orderRoutes = require('./routes/order');
 const certificateRoutes = require('./routes/certificate');
 const announceRoutes = require('./routes/announce');
+const uploadRoutes = require('./routes/upload');
 
 app.use('/dashboard', requireAuth, dashboardRoutes);
 app.use('/book-in', requireAuth, bookInRoutes);
@@ -85,6 +86,7 @@ app.use('/note', requireAuth, noteRoutes);
 app.use('/order', requireAuth, orderRoutes);
 app.use('/certificate', requireAuth, certificateRoutes);
 app.use('/announce', requireAuth, announceRoutes);
+app.use('/files', requireAuth, uploadRoutes);
 
 // --- Health check (ช่วยให้แพลตฟอร์มเช็คได้ว่าแอปพร้อม) ---
 app.get('/healthz', (req, res) => res.status(200).send('ok'));
