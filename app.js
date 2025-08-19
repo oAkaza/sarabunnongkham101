@@ -91,6 +91,9 @@ app.use('/files', requireAuth, uploadRoutes);
 // --- Health check (ช่วยให้แพลตฟอร์มเช็คได้ว่าแอปพร้อม) ---
 app.get('/healthz', (req, res) => res.status(200).send('ok'));
 
+console.log('Node version at runtime:', process.version);
+
+
 // --- 404 & Error handlers แบบเบา ๆ ---
 app.use((req, res) => res.status(404).send('Not Found'));
 app.use((err, req, res, next) => {
